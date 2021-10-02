@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../lib/is-error.ts"],"names":["isError","err"],"mappings":";;;;kBAQwB,OAAO;SAAP,OAAO,CAAC,GAAY,EAAoB,CAAC;IAC/D,MAAM,CACJ,MAAM,CAAC,GAAG,MAAK,MAAQ,KAAI,GAAG,KAAK,IAAI,KAAI,IAAM,KAAI,GAAG,KAAI,OAAS,KAAI,GAAG;AAEhF,CAAC"}

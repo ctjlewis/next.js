@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../trace/index.ts"],"names":["trace","flushAllTraces","Span","SpanStatus","SpanId","setGlobal"],"mappings":";;;;gCAGS,KAAK;;;eAH0C,MAAS;;;gCAGjD,cAAc;;;eAH0B,MAAS;;;gCAGjC,MAAM;;;eAFJ,OAAU;;;gCAEJ,IAAI;;;eAHY,MAAS;;;gCAGnB,UAAU;;;eAHA,MAAS;;;gCAGP,SAAS;;;eAFjC,OAAU;;;AADY,GAAS,CAAT,MAAS;AAC/B,GAAU,CAAV,OAAU"}
