@@ -1,3 +1,4 @@
+import { createContext, runInNewContext } from 'vm'
 import { promises } from 'fs'
 import { join } from 'path'
 import {
@@ -7,10 +8,97 @@ import {
   SERVER_DIRECTORY,
   SERVERLESS_DIRECTORY,
 } from '../shared/lib/constants'
+
 import { normalizePagePath, denormalizePagePath } from './normalize-page-path'
 import { normalizeLocalePath } from '../shared/lib/i18n/normalize-locale-path'
 import type { PagesManifest } from '../build/webpack/plugins/pages-manifest-plugin'
 import type { MiddlewareManifest } from '../build/webpack/plugins/middleware-plugin'
+
+const __FREEZE_GLOBALS__ = () => {
+  const GLOBAL = globalThis as any
+
+  Object.freeze(GLOBAL)
+  Object.freeze(GLOBAL.Buffer)
+  Object.freeze(GLOBAL.process)
+  Object.freeze(GLOBAL.console)
+  Object.freeze(GLOBAL.setTimeout)
+  Object.freeze(GLOBAL.setInterval)
+  Object.freeze(GLOBAL.clearInterval)
+  Object.freeze(GLOBAL.clearTimeout)
+  Object.freeze(GLOBAL.setImmediate)
+  Object.freeze(GLOBAL.clearImmediate)
+  Object.freeze(GLOBAL.__dirname)
+  Object.freeze(GLOBAL.__filename)
+  Object.freeze(GLOBAL.global)
+  Object.freeze(GLOBAL.require)
+  Object.freeze(GLOBAL.exports)
+  Object.freeze(GLOBAL.module)
+  Object.freeze(GLOBAL.Buffer)
+  Object.freeze(GLOBAL.console)
+  Object.freeze(GLOBAL.process)
+  Object.freeze(GLOBAL.setTimeout)
+  Object.freeze(GLOBAL.setInterval)
+  Object.freeze(GLOBAL.clearInterval)
+  Object.freeze(GLOBAL.clearTimeout)
+  Object.freeze(GLOBAL.setImmediate)
+  Object.freeze(GLOBAL.clearImmediate)
+  Object.freeze(GLOBAL.__dirname)
+  Object.freeze(GLOBAL.__filename)
+  Object.freeze(GLOBAL.global)
+  Object.freeze(GLOBAL.require)
+  Object.freeze(GLOBAL.exports)
+  Object.freeze(GLOBAL.module)
+  Object.freeze(GLOBAL.Buffer)
+  Object.freeze(GLOBAL.console)
+  Object.freeze(GLOBAL.process)
+  Object.freeze(GLOBAL.setTimeout)
+  Object.freeze(GLOBAL.setInterval)
+  Object.freeze(GLOBAL.clearInterval)
+  Object.freeze(GLOBAL.clearTimeout)
+  Object.freeze(GLOBAL.setImmediate)
+  Object.freeze(GLOBAL.clearImmediate)
+  Object.freeze(GLOBAL.__dirname)
+  Object.freeze(GLOBAL.__filename)
+
+  Object.freeze(Object.getPrototypeOf([]))
+  Object.freeze(Object.getPrototypeOf({}))
+  Object.freeze(Object.getPrototypeOf(() => void 0))
+  Object.freeze(Object.getPrototypeOf(async () => void 0))
+}
+
+/**
+ * `require(...)` a module within an isolated VM context, which prevents the
+ * module from sharing the same context as Next and potentially contaminating
+ * Next's own logic (i.e., by shimming globals).
+ *
+ * This should be used to load all React components for SSR.
+ * @see requirePage
+ *
+ * @param specifier The module to load.
+ * @returns The loaded module.
+ */
+export function isolatedRequire(specifier: string) {
+  /**
+   * This sandbox will get a cloned, frozen version of the global object. This
+   * means that globalThis will be appropriately scoped to the component and
+   * changes cannot be propagated upward to the Next Server itself.
+   */
+  const sandbox = createContext({
+    globalThis: Object.assign({}, globalThis),
+    require: Object.assign({}, require),
+    __FREEZE_GLOBALS__,
+  })
+  /**
+   * Lock down the component context and then load the Page Component module.
+   */
+  const sesRequire = `;__FREEZE_GLOBALS__(); require(${JSON.stringify(
+    specifier
+  )});`
+  /**
+   * Return the loaded module.
+   */
+  return runInNewContext(sesRequire, sandbox)
+}
 
 export function pageNotFoundError(page: string): Error {
   const err: any = new Error(`Cannot find module for page: ${page}`)
@@ -68,7 +156,11 @@ export function requirePage(
   if (pagePath.endsWith('.html')) {
     return promises.readFile(pagePath, 'utf8')
   }
-  return require(pagePath)
+  /**
+   * Use isolated require() to avoid cross-module contamination with Next's own
+   * logic.
+   */
+  return isolatedRequire(pagePath)
 }
 
 export function requireFontManifest(distDir: string, serverless: boolean) {
