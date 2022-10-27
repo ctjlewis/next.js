@@ -8,7 +8,6 @@
 
 import {
   createNextApp,
-  projectFilesShouldExist,
   projectFilesShouldNotExist,
   shouldBeJavascriptProject,
   shouldBeAppProject,
