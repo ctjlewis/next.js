@@ -42,8 +42,8 @@ export async function createApp({
   const template = experimentalApp
     ? 'experimental-app'
     : typescript
-      ? 'typescript'
-      : 'default'
+    ? 'typescript'
+    : 'default'
 
   if (example) {
     let repoUrl: URL | undefined

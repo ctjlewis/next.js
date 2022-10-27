@@ -132,16 +132,16 @@ export const shouldBeTypescriptProject = ({
   })
 
   projectDepsShouldBe({
+    type: 'dependencies',
     cwd,
     projectName,
-    type: 'dependencies',
     deps: projectDeps.ts,
   })
 
   projectDepsShouldBe({
+    type: 'devDependencies',
     cwd,
     projectName,
-    type: 'devDependencies',
     deps: projectDevDeps.ts,
   })
 }
