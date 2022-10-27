@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from 'async_hooks'
 import type { AssetBinding } from '../../../build/webpack/loaders/get-module-build-info'
 import {
   decorateServerError,
@@ -127,6 +128,15 @@ function getDecorateUnhandledError(runtime: EdgeRuntime) {
   }
 }
 
+function getDecorateUnhandledRejection(runtime: EdgeRuntime) {
+  const EdgeRuntimeError = runtime.evaluate(`Error`)
+  return (rejected: { reason: typeof EdgeRuntimeError }) => {
+    if (rejected.reason instanceof EdgeRuntimeError) {
+      decorateServerError(rejected.reason, COMPILER_NAMES.edgeServer)
+    }
+  }
+}
+
 /**
  * Create a module cache specific for the provided parameters. It includes
  * a runtime context, require cache and paths cache.
@@ -148,7 +158,8 @@ async function createModuleContext(options: ModuleContextOptions) {
         if (!warnedEvals.has(key)) {
           const warning = getServerError(
             new Error(
-              `Dynamic Code Evaluation (e. g. 'eval', 'new Function') not allowed in Edge Runtime`
+              `Dynamic Code Evaluation (e. g. 'eval', 'new Function') not allowed in Edge Runtime
+Learn More: https://nextjs.org/docs/messages/edge-dynamic-code-evaluation`
             ),
             COMPILER_NAMES.edgeServer
           )
@@ -166,7 +177,7 @@ async function createModuleContext(options: ModuleContextOptions) {
           if (!warnedWasmCodegens.has(key)) {
             const warning = getServerError(
               new Error(`Dynamic WASM code generation (e. g. 'WebAssembly.compile') not allowed in Edge Runtime.
-Learn More: https://nextjs.org/docs/messages/middleware-dynamic-wasm-compilation`),
+Learn More: https://nextjs.org/docs/messages/edge-dynamic-code-evaluation`),
               COMPILER_NAMES.edgeServer
             )
             warning.name = 'DynamicWasmCodeGenerationWarning'
@@ -193,7 +204,7 @@ Learn More: https://nextjs.org/docs/messages/middleware-dynamic-wasm-compilation
           if (instantiatedFromBuffer && !warnedWasmCodegens.has(key)) {
             const warning = getServerError(
               new Error(`Dynamic WASM code generation ('WebAssembly.instantiate' with a buffer parameter) not allowed in Edge Runtime.
-Learn More: https://nextjs.org/docs/messages/middleware-dynamic-wasm-compilation`),
+Learn More: https://nextjs.org/docs/messages/edge-dynamic-code-evaluation`),
               COMPILER_NAMES.edgeServer
             )
             warning.name = 'DynamicWasmCodeGenerationWarning'
@@ -254,6 +265,7 @@ Learn More: https://nextjs.org/docs/messages/middleware-dynamic-wasm-compilation
 
       const __Request = context.Request
       context.Request = class extends __Request {
+        next?: NextFetchRequestConfig | undefined
         constructor(input: URL | RequestInfo, init?: RequestInit | undefined) {
           const url =
             typeof input !== 'string' && 'url' in input
@@ -261,6 +273,7 @@ Learn More: https://nextjs.org/docs/messages/middleware-dynamic-wasm-compilation
               : String(input)
           validateURL(url)
           super(url, init)
+          this.next = init?.next
         }
       }
 
@@ -276,13 +289,19 @@ Learn More: https://nextjs.org/docs/messages/middleware-dynamic-wasm-compilation
 
       Object.assign(context, wasm)
 
+      context.AsyncLocalStorage = AsyncLocalStorage
+
       return context
     },
   })
 
   const decorateUnhandledError = getDecorateUnhandledError(runtime)
-  runtime.context.addEventListener('unhandledrejection', decorateUnhandledError)
   runtime.context.addEventListener('error', decorateUnhandledError)
+  const decorateUnhandledRejection = getDecorateUnhandledRejection(runtime)
+  runtime.context.addEventListener(
+    'unhandledrejection',
+    decorateUnhandledRejection
+  )
 
   return {
     runtime,
@@ -300,15 +319,8 @@ interface ModuleContextOptions {
   edgeFunctionEntry: Pick<EdgeFunctionDefinition, 'assets' | 'wasm'>
 }
 
-const pendingModuleCaches = new Map<string, Promise<ModuleContext>>()
-
 function getModuleContextShared(options: ModuleContextOptions) {
-  let deferredModuleContext = pendingModuleCaches.get(options.moduleName)
-  if (!deferredModuleContext) {
-    deferredModuleContext = createModuleContext(options)
-    pendingModuleCaches.set(options.moduleName, deferredModuleContext)
-  }
-  return deferredModuleContext
+  return createModuleContext(options)
 }
 
 /**

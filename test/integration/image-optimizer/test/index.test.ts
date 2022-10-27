@@ -8,7 +8,6 @@ import {
   launchApp,
   nextBuild,
   nextStart,
-  renderViaHTTP,
   waitFor,
 } from 'next-test-utils'
 import { join } from 'path'
@@ -52,12 +51,10 @@ describe('Image Optimizer', () => {
       await nextConfig.replace(
         '{ /* replaceme */ }',
         JSON.stringify({
-          experimental: {
-            images: {
-              remotePatterns: Array.from({ length: 51 }).map((_) => ({
-                hostname: 'example.com',
-              })),
-            },
+          images: {
+            remotePatterns: Array.from({ length: 51 }).map((_) => ({
+              hostname: 'example.com',
+            })),
           },
         })
       )
@@ -81,10 +78,8 @@ describe('Image Optimizer', () => {
       await nextConfig.replace(
         '{ /* replaceme */ }',
         JSON.stringify({
-          experimental: {
-            images: {
-              remotePatterns: [{ hostname: 'example.com', foo: 'bar' }],
-            },
+          images: {
+            remotePatterns: [{ hostname: 'example.com', foo: 'bar' }],
           },
         })
       )
@@ -108,10 +103,8 @@ describe('Image Optimizer', () => {
       await nextConfig.replace(
         '{ /* replaceme */ }',
         JSON.stringify({
-          experimental: {
-            images: {
-              remotePatterns: [{ protocol: 'https' }],
-            },
+          images: {
+            remotePatterns: [{ protocol: 'https' }],
           },
         })
       )
@@ -231,33 +224,6 @@ describe('Image Optimizer', () => {
       )
     })
 
-    it('should error when loader=custom but loader prop is undefined', async () => {
-      await nextConfig.replace(
-        '{ /* replaceme */ }',
-        JSON.stringify({
-          images: {
-            loader: 'custom',
-          },
-        })
-      )
-      let output = ''
-      const appPort = await findPort()
-      app = await launchApp(appDir, appPort, {
-        onStderr(msg) {
-          output += msg || ''
-        },
-        onStdout(msg) {
-          output += msg || ''
-        },
-      })
-      await renderViaHTTP(appPort, '/', {})
-      await killApp(app).catch(() => {})
-      await nextConfig.restore()
-      expect(output).toMatch(
-        /Error: Image with src "(.+)" is missing "loader" prop/
-      )
-    })
-
     it('should error when images.formats contains invalid values', async () => {
       await nextConfig.replace(
         '{ /* replaceme */ }',
@@ -306,6 +272,56 @@ describe('Image Optimizer', () => {
       expect(stderr).toContain(
         `Specified images.loader property (imgix) also requires images.path property to be assigned to a URL prefix.`
       )
+    })
+
+    it('should error when images.loader and images.loaderFile are both assigned', async () => {
+      await nextConfig.replace(
+        '{ /* replaceme */ }',
+        JSON.stringify({
+          images: {
+            loader: 'imgix',
+            path: 'https://example.com',
+            loaderFile: './dummy.js',
+          },
+        })
+      )
+      let stderr = ''
+
+      app = await launchApp(appDir, await findPort(), {
+        onStderr(msg) {
+          stderr += msg || ''
+        },
+      })
+      await waitFor(1000)
+      await killApp(app).catch(() => {})
+      await nextConfig.restore()
+
+      expect(stderr).toContain(
+        `Specified images.loader property (imgix) cannot be used with images.loaderFile property. Please set images.loader to "custom".`
+      )
+    })
+
+    it('should error when images.loaderFile does not exist', async () => {
+      await nextConfig.replace(
+        '{ /* replaceme */ }',
+        JSON.stringify({
+          images: {
+            loaderFile: './fakefile.js',
+          },
+        })
+      )
+      let stderr = ''
+
+      app = await launchApp(appDir, await findPort(), {
+        onStderr(msg) {
+          stderr += msg || ''
+        },
+      })
+      await waitFor(1000)
+      await killApp(app).catch(() => {})
+      await nextConfig.restore()
+
+      expect(stderr).toContain(`Specified images.loaderFile does not exist at`)
     })
 
     it('should error when images.dangerouslyAllowSVG is not a boolean', async () => {

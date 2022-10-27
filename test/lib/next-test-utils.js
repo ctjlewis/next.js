@@ -83,6 +83,12 @@ export function initNextServerScript(
   })
 }
 
+/**
+ * @param {string | number} appPortOrUrl
+ * @param {string} [url]
+ * @param {string} [hostname]
+ * @returns
+ */
 export function getFullUrl(appPortOrUrl, url, hostname) {
   let fullUrl =
     typeof appPortOrUrl === 'string' && appPortOrUrl.startsWith('http')
@@ -110,11 +116,24 @@ export function renderViaAPI(app, pathname, query) {
   return app.renderToHTML({ url }, {}, pathname, query)
 }
 
+/**
+ * @param {string | number} appPort
+ * @param {string} pathname
+ * @param {Record<string, any> | string | undefined} [query]
+ * @param {import('node-fetch').RequestInit} [opts]
+ * @returns {Promise<string>}
+ */
 export function renderViaHTTP(appPort, pathname, query, opts) {
   return fetchViaHTTP(appPort, pathname, query, opts).then((res) => res.text())
 }
 
-/** @return {Promise<Response & {buffer: any} & {headers: any}>} */
+/**
+ * @param {string | number} appPort
+ * @param {string} pathname
+ * @param {Record<string, any> | string | undefined} [query]
+ * @param {import('node-fetch').RequestInit} [opts]
+ * @returns {Promise<Response & {buffer: any} & {headers: any}>}
+ */
 export function fetchViaHTTP(appPort, pathname, query, opts) {
   const url = `${pathname}${
     typeof query === 'string' ? query : query ? `?${qs.stringify(query)}` : ''
@@ -271,11 +290,14 @@ export function runNextCommandDev(argv, stdOut, opts = {}) {
       const message = data.toString()
       const bootupMarkers = {
         dev: /compiled .*successfully/i,
+        turbo: /initial compilation/i,
         start: /started server/i,
       }
       if (
         (opts.bootupMarker && opts.bootupMarker.test(message)) ||
-        bootupMarkers[opts.nextStart || stdOut ? 'start' : 'dev'].test(message)
+        bootupMarkers[
+          opts.nextStart || stdOut ? 'start' : opts?.turbo ? 'turbo' : 'dev'
+        ].test(message)
       ) {
         if (!didResolve) {
           didResolve = true
@@ -323,7 +345,17 @@ export function runNextCommandDev(argv, stdOut, opts = {}) {
 
 // Launch the app in dev mode.
 export function launchApp(dir, port, opts) {
-  return runNextCommandDev([dir, '-p', port], undefined, opts)
+  const { turbo, ...options } = opts ?? {}
+  const useTurbo = !process.env.TEST_WASM && turbo
+
+  return runNextCommandDev(
+    [useTurbo ? '--turbo' : undefined, dir, '-p', port].filter(Boolean),
+    undefined,
+    {
+      ...options,
+      turbo: useTurbo,
+    }
+  )
 }
 
 export function nextBuild(dir, args = [], opts = {}) {
@@ -595,7 +627,7 @@ export async function hasRedbox(browser, expected = true) {
           .call(document.querySelectorAll('nextjs-portal'))
           .find((p) =>
             p.shadowRoot.querySelector(
-              '#nextjs__container_errors_label, #nextjs__container_build_error_label'
+              '#nextjs__container_errors_label, #nextjs__container_build_error_label, #nextjs__container_root_layout_error_label'
             )
           )
       )
@@ -635,7 +667,7 @@ export async function getRedboxSource(browser) {
           .call(document.querySelectorAll('nextjs-portal'))
           .find((p) =>
             p.shadowRoot.querySelector(
-              '#nextjs__container_errors_label, #nextjs__container_build_error_label'
+              '#nextjs__container_errors_label, #nextjs__container_build_error_label, #nextjs__container_root_layout_error_label'
             )
           )
         const root = portal.shadowRoot
