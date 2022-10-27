@@ -1,11 +1,19 @@
 /* eslint-env jest */
+/**
+ * @fileoverview
+ *
+ * This file contains tests for `create-next-app` templates, currently
+ * JavaScript (default), TypeScript, and appDir.
+ */
 
 import {
   createNextApp,
+  projectFilesShouldExist,
   projectFilesShouldNotExist,
   shouldBeJavascriptProject,
-  shouldBeTypescriptProject,
+  shouldBeAppProject,
   spawnExitPromise,
+  shouldBeTypescriptProject,
 } from './lib/utils'
 
 import { useTempDir } from '../../../test/lib/use-temp-dir'
@@ -63,6 +71,19 @@ describe('create-next-app templates', () => {
 
       expect(exitCode).toBe(0)
       shouldBeJavascriptProject({ cwd, projectName })
+    })
+  })
+
+  it('should create appDir projects with --experimental-app', async () => {
+    await useTempDir(async (cwd) => {
+      const projectName = 'appdir-test'
+      const childProcess = createNextApp([projectName, '--experimental-app'], {
+        cwd,
+      })
+
+      const exitCode = await spawnExitPromise(childProcess)
+      expect(exitCode).toBe(0)
+      shouldBeAppProject({ cwd, projectName })
     })
   })
 })

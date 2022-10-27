@@ -145,3 +145,31 @@ export const shouldBeTypescriptProject = ({
     deps: projectDevDeps.ts,
   })
 }
+
+export const shouldBeAppProject = ({ cwd, projectName }: ProjectOptions) => {
+  projectFilesShouldExist({
+    cwd,
+    projectName,
+    files: [...projectFiles.global, ...projectFiles.app],
+  })
+
+  projectFilesShouldNotExist({
+    cwd,
+    projectName,
+    files: projectFiles.js,
+  })
+
+  projectDepsShouldBe({
+    type: 'dependencies',
+    cwd,
+    projectName,
+    deps: projectDeps.ts,
+  })
+
+  projectDepsShouldBe({
+    type: 'devDependencies',
+    cwd,
+    projectName,
+    deps: projectDevDeps.ts,
+  })
+}

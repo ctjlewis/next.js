@@ -20,6 +20,13 @@ export const projectFiles = {
     'tsconfig.json',
     'next-env.d.ts',
   ],
+  app: [
+    'app/page.tsx',
+    'app/layout.tsx',
+    'pages/api/hello.ts',
+    'tsconfig.json',
+    'next-env.d.ts',
+  ],
 }
 
 export const projectDeps = {

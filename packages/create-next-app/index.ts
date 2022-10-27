@@ -41,13 +41,6 @@ const program = new Commander.Command(packageJson.name)
 `
   )
   .option(
-    '--experimental-app',
-    `
-
-  Initialize as a \`app/\` directory project.
-`
-  )
-  .option(
     '--use-npm',
     `
 
@@ -152,10 +145,13 @@ async function run(): Promise<void> {
   const example = typeof program.example === 'string' && program.example.trim()
 
   /**
-   * If the user does not provide a --js or --ts flag set, ask them whether or
-   * not they'd like to use TypeScript.
+   * If the user does not provide the necessary flags, prompt them for whether
+   * to use TS or JS.
+   *
+   * @todo Allow appDir to support TS or JS, currently TS-only and disables all
+   * --ts, --js features.
    */
-  if (!program.typescript && !program.javascript) {
+  if (!program.experimentalApp && !program.typescript && !program.javascript) {
     const styledTypeScript = chalk.hex('#007acc')('TypeScript')
     const { typescript } = await prompts(
       {
