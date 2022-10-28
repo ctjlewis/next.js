@@ -1,25 +1,33 @@
-import { TemplateMode, TemplateType } from '../../../../packages/create-next-app/templates'
+import {
+  TemplateMode,
+  TemplateType,
+} from '../../../../packages/create-next-app/templates'
 
 export type ProjectSettings = {
-  files: string[],
-  deps: string[],
-  devDeps: string[],
+  files: string[]
+  deps: string[]
+  devDeps: string[]
 }
 
 export type ProjectSpecification = {
-   global: ProjectSettings 
+  global: ProjectSettings
 } & {
   [key in TemplateType]: {
     [key in TemplateMode]: ProjectSettings
   }
-};
+}
 
 /**
  * Required files for a given project template and mode.
  */
 export const projectSpecification: ProjectSpecification = {
   global: {
-    files: ['package.json', '.eslintrc.json', 'node_modules/next', '.gitignore'],
+    files: [
+      'package.json',
+      '.eslintrc.json',
+      'node_modules/next',
+      '.gitignore',
+    ],
     deps: ['next', 'react', 'react-dom'],
     devDeps: ['eslint', 'eslint-config-next'],
   },
@@ -50,11 +58,7 @@ export const projectSpecification: ProjectSpecification = {
     js: {
       deps: [],
       devDeps: [],
-      files: [
-        'app/page.jsx',
-        'app/layout.jsx',
-        'pages/api/hello.js',
-      ]
+      files: ['app/page.jsx', 'app/layout.jsx', 'pages/api/hello.js'],
     },
     ts: {
       deps: [],
@@ -70,21 +74,21 @@ export const projectSpecification: ProjectSpecification = {
         'pages/api/hello.ts',
         'tsconfig.json',
         'next-env.d.ts',
-      ]
+      ],
     },
-  }
-};
+  },
+}
 
 export type GetProjectSettingsArgs = {
-  template: TemplateType,
-  mode: TemplateMode,
-  setting: keyof ProjectSettings,
+  template: TemplateType
+  mode: TemplateMode
+  setting: keyof ProjectSettings
 }
 
 export const getProjectSetting = ({
   template,
   mode,
-  setting
+  setting,
 }: GetProjectSettingsArgs) => {
   return [
     ...projectSpecification.global[setting],

@@ -1,4 +1,7 @@
-import { TemplateMode, TemplateType } from '../../../../packages/create-next-app/templates';
+import {
+  TemplateMode,
+  TemplateType,
+} from '../../../../packages/create-next-app/templates'
 
 export interface DefaultTemplateOptions {
   cwd: string
@@ -6,8 +9,8 @@ export interface DefaultTemplateOptions {
 }
 
 export interface CustomTemplateOptions extends DefaultTemplateOptions {
-  mode: TemplateMode;
-  template: TemplateType;
+  mode: TemplateMode
+  template: TemplateType
 }
 
 export interface ProjectFiles extends DefaultTemplateOptions {

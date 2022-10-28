@@ -1,4 +1,3 @@
-
 import { install } from '../helpers/install'
 
 import cpy from 'cpy'
@@ -12,12 +11,12 @@ import { GetTemplateFileArgs, InstallTemplateArgs } from './types'
 /**
  * Get the file path for a given file in a template, e.g. "next.config.js".
  */
- export const getTemplateFile = ({
+export const getTemplateFile = ({
   template,
   mode,
   file,
 }: GetTemplateFileArgs): string => {
-  return path.join(__dirname, template, mode, file);
+  return path.join(__dirname, template, mode, file)
 }
 
 /**
@@ -36,7 +35,7 @@ export const installTemplate = async ({
   /**
    * Create a package.json for the new project.
    */
-   const packageJson = {
+  const packageJson = {
     name: appName,
     version: '0.1.0',
     private: true,
@@ -130,6 +129,6 @@ export const installTemplate = async ({
       }
     },
   })
-};
+}
 
 export * from './types'

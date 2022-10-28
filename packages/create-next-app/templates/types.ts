@@ -1,4 +1,4 @@
-import { PackageManager } from "../helpers/get-pkg-manager";
+import { PackageManager } from '../helpers/get-pkg-manager'
 
 export type TemplateType = 'default' | 'app'
 export type TemplateMode = 'js' | 'ts'

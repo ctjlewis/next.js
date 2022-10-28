@@ -72,7 +72,12 @@ export const projectDepsShouldBe = ({
   expect(Object.keys(pkgJson[type]).sort()).toEqual(deps.sort())
 }
 
-export const shouldBeTemplateProject = ({ cwd, projectName, template, mode }: CustomTemplateOptions) => {
+export const shouldBeTemplateProject = ({
+  cwd,
+  projectName,
+  template,
+  mode,
+}: CustomTemplateOptions) => {
   projectFilesShouldExist({
     cwd,
     projectName,
@@ -100,20 +105,18 @@ export const shouldBeTemplateProject = ({ cwd, projectName, template, mode }: Cu
   })
 }
 
-
 export const shouldBeJavascriptProject = ({
   cwd,
   projectName,
   template,
-}: Omit<CustomTemplateOptions, "mode">) => {
+}: Omit<CustomTemplateOptions, 'mode'>) => {
   shouldBeTemplateProject({ cwd, projectName, template, mode: 'js' })
-
 }
 
 export const shouldBeTypescriptProject = ({
   cwd,
   projectName,
   template,
-}: Omit<CustomTemplateOptions, "mode">) => {
+}: Omit<CustomTemplateOptions, 'mode'>) => {
   shouldBeTemplateProject({ cwd, projectName, template, mode: 'ts' })
 }
