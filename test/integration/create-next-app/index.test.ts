@@ -145,6 +145,7 @@ describe('create next app', () => {
       const res = await run(
         [
           projectName,
+          '--js',
           '--example',
           'https://github.com/vercel/nextjs-portfolio-starter/',
         ],
@@ -204,6 +205,7 @@ describe('create next app', () => {
       const res = await run(
         [
           projectName,
+          '--js',
           '--example',
           `${exampleRepo}/${examplePath}`,
           '--example-path',
@@ -348,6 +350,7 @@ describe('create next app', () => {
       const res = await run(
         [
           projectName,
+          '--js',
           '--use-npm',
           '--example',
           `${exampleRepo}/${examplePath}`,
